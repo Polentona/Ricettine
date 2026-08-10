@@ -1,0 +1,55 @@
+name: Rebuild Ricettine background
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'rebuild-bg.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild binary background exactly
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, hashlib
+          parts = sorted(Path('.bgparts').glob('part*'))
+          if len(parts) != 9:
+              raise SystemExit(f'Expected 9 parts, found {len(parts)}')
+          text = ''.join(p.read_text(encoding='utf-8') for p in parts)
+          data = base64.b64decode(text, validate=True)
+          expected_len = 53564
+          expected_sha = 'b93056933b018822e871d1d3d912e5782d958acee6775ae32e148ab14d087cd4'
+          actual_sha = hashlib.sha256(data).hexdigest()
+          if len(data) != expected_len or actual_sha != expected_sha:
+              raise SystemExit(f'Background verification failed: len={len(data)} sha={actual_sha}')
+          if data[:4] != b'RIFF' or data[8:12] != b'WEBP':
+              raise SystemExit('Not a valid WebP container')
+          Path('sfondo_cincilla.webp').write_bytes(data)
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+          import re
+          html = re.sub(r'background-image:url\("sfondo_cincilla\.(?:svg|webp|png)(?:\?v=\d+)?"\)', 'background-image:url("sfondo_cincilla.webp?v=6")', html)
+          p.write_text(html, encoding='utf-8')
+          PY
+      - name: Verify file on disk
+        run: |
+          file sfondo_cincilla.webp
+          sha256sum sfondo_cincilla.webp
+          test "$(stat -c%s sfondo_cincilla.webp)" = "53564"
+      - name: Clean temporary files and commit
+        run: |
+          rm -rf .bgparts rebuild-bg.trigger
+          rm -f .github/workflows/rebuild-background.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Ripristina sfondo cincillà valido e verificato"
+          git push
