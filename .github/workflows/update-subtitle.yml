@@ -1,0 +1,49 @@
+name: Update Ricettine subtitle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'subtitle-update.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update subtitle only
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+
+          old = 'Il piccolo ricettario dei cincillà chef 🥣'
+          new = 'piccolo ricettario cincioso'
+          if old not in html:
+              raise SystemExit('Subtitle text not found')
+          html = html.replace(old, new, 1)
+
+          marker = '.brand-row>div:first-child{display:flex;flex-direction:column;align-items:flex-start}'
+          if marker not in html:
+              needle = '.brand-row{display:flex;align-items:center;justify-content:space-between;gap:20px}'
+              if needle not in html:
+                  raise SystemExit('Brand row CSS not found')
+              html = html.replace(needle, needle + marker, 1)
+
+          p.write_text(html, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          rm -f subtitle-update.trigger
+          rm -f .github/workflows/update-subtitle.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Modifica sottotitolo in piccolo ricettario cincioso"
+          git push
