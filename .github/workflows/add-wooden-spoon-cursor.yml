@@ -1,0 +1,36 @@
+name: Add wooden spoon cursor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wooden-spoon-cursor.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add custom cursor CSS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          css='\nhtml,body,body *{cursor:url("cucchiaio-cursore.svg") 8 7,auto!important}\n'
+          if 'cucchiaio-cursore.svg' not in html:
+              html=html.replace('</style>',css+'</style>',1)
+              p.write_text(html,encoding='utf-8')
+          PY
+      - name: Commit update
+        run: |
+          rm -f wooden-spoon-cursor.trigger
+          rm -f .github/workflows/add-wooden-spoon-cursor.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Imposta cursore a cucchiaio di legno"
+          git push
