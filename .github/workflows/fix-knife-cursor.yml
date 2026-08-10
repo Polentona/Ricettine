@@ -1,0 +1,38 @@
+name: Fix knife cursor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'fix-knife-cursor.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-cursor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace spoon cursor with knife cursor
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+          old = 'html,body,body *{cursor:url("cucchiaio-cursore.svg") 8 7,auto!important}'
+          new = 'html,body,body *{cursor:url("coltello-cursore.svg?v=2") 4 16,auto!important}'
+          if old not in html:
+              raise SystemExit('Vecchia regola cursore non trovata')
+          html = html.replace(old, new, 1)
+          p.write_text(html, encoding='utf-8')
+          PY
+      - name: Commit update
+        run: |
+          rm -f fix-knife-cursor.trigger
+          rm -f .github/workflows/fix-knife-cursor.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sostituisce il cursore cucchiaio con coltello"
+          git push
