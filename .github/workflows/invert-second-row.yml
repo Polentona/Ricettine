@@ -26,20 +26,20 @@ jobs:
 
           p = Path('sfondo_cincilla.webp')
           im = Image.open(p).convert('RGB')
-          if im.size != (2400, 800):
+          if im.size != (1200, 400):
               raise SystemExit(f'Unexpected background size: {im.size}')
 
           out = im.copy()
-          y0, y1 = 400, 800
-          white1 = im.crop((0, y0, 400, y1))
-          gray1  = im.crop((600, y0, 1000, y1))
-          white2 = im.crop((1200, y0, 1600, y1))
-          gray2  = im.crop((1800, y0, 2200, y1))
+          y0, y1 = 200, 400
+          white1 = im.crop((0, y0, 200, y1))
+          gray1  = im.crop((300, y0, 500, y1))
+          white2 = im.crop((600, y0, 800, y1))
+          gray2  = im.crop((900, y0, 1100, y1))
 
           out.paste(gray1,  (0, y0))
-          out.paste(white1, (600, y0))
-          out.paste(gray2,  (1200, y0))
-          out.paste(white2, (1800, y0))
+          out.paste(white1, (300, y0))
+          out.paste(gray2,  (600, y0))
+          out.paste(white2, (900, y0))
           out.save(p, 'WEBP', quality=95, method=6)
 
           index = Path('index.html')
@@ -53,6 +53,6 @@ jobs:
           rm -f .github/workflows/invert-second-row.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sfondo_cincilla.webp index.html invert-row.trigger .github/workflows/invert-second-row.yml
+          git add -A
           git commit -m "Inverte i colori della seconda riga di cincillà"
           git push
