@@ -1,0 +1,38 @@
+name: Add bowl to Ricettine subtitle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'subtitle-bowl.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update subtitle
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+          old = '<p class="subtitle">piccolo ricettario cincioso</p>'
+          new = '<p class="subtitle">piccolo ricettario cincioso 🥣</p>'
+          if old not in html:
+              raise SystemExit('Sottotitolo atteso non trovato')
+          html = html.replace(old, new, 1)
+          p.write_text(html, encoding='utf-8')
+          PY
+      - name: Commit update
+        run: |
+          rm -f subtitle-bowl.trigger
+          rm -f .github/workflows/add-bowl-subtitle.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Aggiunge ciotolina al sottotitolo"
+          git push
