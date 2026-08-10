@@ -14,13 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Fix updater
+        run: python tools/fix_update_categories.py
       - name: Apply update
         run: python tools/update_categories.py
       - name: Commit update
         run: |
           rm -f categories-update.trigger
           rm -f .github/workflows/add-dynamic-categories.yml
-          rm -f tools/update_categories.py
+          rm -f tools/update_categories.py tools/fix_update_categories.py
+          rmdir tools 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
