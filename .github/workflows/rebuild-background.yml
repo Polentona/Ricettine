@@ -21,8 +21,8 @@ jobs:
           from pathlib import Path
           import base64, hashlib, re
           parts = sorted(Path('.bgparts').glob('part*'))
-          if len(parts) != 15:
-              raise SystemExit(f'Expected 15 parts, found {len(parts)}')
+          if len(parts) != 8:
+              raise SystemExit(f'Expected 8 parts, found {len(parts)}')
           text = ''.join(p.read_text(encoding='utf-8') for p in parts)
           data = base64.b64decode(text, validate=True)
           expected_len = 53564
