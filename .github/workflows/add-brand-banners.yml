@@ -1,0 +1,47 @@
+name: Add brand text backgrounds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'brand-banners.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add backgrounds only to title and subtitle
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+
+          old_logo = '.logo{margin:0;font-family:"Courier New",monospace;font-size:clamp(30px,4vw,52px);letter-spacing:5px;font-weight:700;color:#8d625c}'
+          new_logo = '.logo{margin:0;display:inline-block;font-family:"Courier New",monospace;font-size:clamp(30px,4vw,52px);letter-spacing:5px;font-weight:700;color:#8d625c;background:rgba(255,253,251,.92);border:1px solid var(--line);border-radius:14px;padding:8px 16px;box-shadow:var(--shadow)}'
+
+          old_sub = '.subtitle{color:var(--muted);margin:4px 0 0;font-size:15px}'
+          new_sub = '.subtitle{display:inline-block;color:var(--muted);margin:7px 0 0;font-size:15px;background:rgba(255,253,251,.92);border:1px solid var(--line);border-radius:10px;padding:6px 11px;box-shadow:var(--shadow)}'
+
+          if old_logo not in html or old_sub not in html:
+              raise SystemExit('CSS target not found; no changes made')
+
+          html = html.replace(old_logo, new_logo, 1)
+          html = html.replace(old_sub, new_sub, 1)
+          p.write_text(html, encoding='utf-8')
+          PY
+      - name: Commit only requested change
+        run: |
+          rm -f brand-banners.trigger
+          rm -f .github/workflows/add-brand-banners.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Aggiunge riquadri dietro titolo e sottotitolo"
+          git push
